@@ -37,14 +37,18 @@ async function pushNow() {
   const payload = { user_id: userId, ...snapshot(s) };
   const serialized = JSON.stringify(payload);
   if (serialized === lastPushedJSON) return;
+  // eslint-disable-next-line no-console
+  console.log('[sync] pushing', { user_id: userId, bytes: serialized.length });
   const { error } = await supabase.from('user_state').upsert(payload, {
     onConflict: 'user_id',
   });
   if (error) {
     // eslint-disable-next-line no-console
-    console.warn('[sync] push failed:', error.message);
+    console.error('[sync] push failed:', error);
     return;
   }
+  // eslint-disable-next-line no-console
+  console.log('[sync] push ok');
   lastPushedJSON = serialized;
 }
 
@@ -60,6 +64,8 @@ function schedulePush() {
 // If not, write the current local state up (covers the very-first launch).
 async function pullAndAdopt(): Promise<void> {
   if (!userId) return;
+  // eslint-disable-next-line no-console
+  console.log('[sync] pulling user_state for', userId);
   const { data, error } = await supabase
     .from('user_state')
     .select('answers, check_ins, history, reminders, card_order, has_onboarded, updated_at')
@@ -68,15 +74,19 @@ async function pullAndAdopt(): Promise<void> {
 
   if (error) {
     // eslint-disable-next-line no-console
-    console.warn('[sync] pull failed:', error.message);
+    console.error('[sync] pull failed:', error);
     return;
   }
 
   if (!data) {
+    // eslint-disable-next-line no-console
+    console.log('[sync] no remote row, pushing local state up');
     // Brand new user: push current local state up so we have a row.
     await pushNow();
     return;
   }
+  // eslint-disable-next-line no-console
+  console.log('[sync] pulled remote row, adopting');
 
   // Hydrate the local store with the remote row, then mark
   // it as the last-known-pushed state so we don't bounce it back immediately.
@@ -94,10 +104,22 @@ async function pullAndAdopt(): Promise<void> {
 }
 
 export async function startSync(): Promise<void> {
+  // eslint-disable-next-line no-console
+  console.log('[sync] startSync called, supabaseEnabled =', supabaseEnabled);
   if (!supabaseEnabled) return;
   const session = await ensureSession();
-  if (!session) return;
+  if (!session) {
+    // eslint-disable-next-line no-console
+    console.error('[sync] no session — anonymous sign-in failed');
+    return;
+  }
   userId = session.user.id;
+  // eslint-disable-next-line no-console
+  console.log('[sync] session established, user_id =', userId);
+  // Expose supabase to the window for live debugging.
+  if (typeof window !== 'undefined') {
+    (window as unknown as { supabase: typeof supabase }).supabase = supabase;
+  }
 
   await pullAndAdopt();
 
