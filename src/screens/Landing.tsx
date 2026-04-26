@@ -15,6 +15,7 @@ import { HamburgerGlyph } from '../components/HamburgerGlyph';
 import { useButtonOrigin } from '../util/origin';
 import { useNav } from '../state/nav';
 import { STEPS } from '../theme/steps';
+import { events, track } from '../util/analytics';
 
 export function Landing() {
   const { ref, measure } = useButtonOrigin();
@@ -23,6 +24,7 @@ export function Landing() {
   const setStepIdx = useNav((s) => s.setStepIdx);
 
   const onBegin = async () => {
+    track(events.onboardingStarted);
     const origin = await measure();
     const first = STEPS[0]!;
     setWash({

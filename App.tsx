@@ -33,8 +33,12 @@ import { useStore } from './src/state/store';
 import { STEP_BY_KEY } from './src/theme/steps';
 import { scheduleDailyReminder, cancelReminder } from './src/state/notifications';
 import { startSync } from './src/state/sync';
+import { initAnalytics } from './src/util/analytics';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Initialize analytics once at module load (web only — no-op elsewhere).
+initAnalytics();
 
 export default function App() {
   const [fontsLoaded] = useFonts({

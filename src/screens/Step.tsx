@@ -18,6 +18,7 @@ import { ProgressDots } from '../components/ProgressDots';
 import { useNav } from '../state/nav';
 import { useStore } from '../state/store';
 import { useButtonOrigin } from '../util/origin';
+import { events, track } from '../util/analytics';
 
 export function Step() {
   const stepIdx = useNav((s) => s.stepIdx);
@@ -42,6 +43,7 @@ export function Step() {
 
   const onNext = async () => {
     if (!canAdvance) return;
+    track(events.onboardingStepCompleted, { step: step.key, index: stepIdx });
     const origin = await measure();
     if (stepIdx < STEPS.length - 1) {
       const next = STEPS[stepIdx + 1]!;
@@ -56,6 +58,7 @@ export function Step() {
       });
       setTimeout(() => setStepIdx(stepIdx + 1), 260);
     } else {
+      track(events.onboardingCompleted);
       setWash({ color: SUMMARY.bg, origin });
       finishOnboarding();
       setTimeout(() => setScreen('summary'), 260);

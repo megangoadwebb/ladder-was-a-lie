@@ -1,6 +1,7 @@
 import { ensureSession, supabase, supabaseEnabled } from './supabase';
 import { useStore, type State } from './store';
 import type { StepKey } from '../theme/steps';
+import { identifyUser } from '../util/analytics';
 
 type RemoteRow = {
   user_id: string;
@@ -116,6 +117,7 @@ export async function startSync(): Promise<void> {
   userId = session.user.id;
   // eslint-disable-next-line no-console
   console.log('[sync] session established, user_id =', userId);
+  identifyUser(userId);
   // Expose supabase to the window for live debugging.
   if (typeof window !== 'undefined') {
     (window as unknown as { supabase: typeof supabase }).supabase = supabase;

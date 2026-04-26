@@ -30,6 +30,7 @@ import {
 } from '../util/dates';
 import { Sparkline } from '../components/Sparkline';
 import { scheduleDailyReminder, cancelReminder } from '../state/notifications';
+import { events, track } from '../util/analytics';
 
 type Props = { valueKey: StepKey };
 
@@ -311,6 +312,7 @@ export function ValueDetail({ valueKey }: Props) {
                 value={reminder}
                 onToggle={async (next) => {
                   setReminder(valueKey, next);
+                  track(events.reminderToggled, { step: valueKey, enabled: next });
                   if (next) await scheduleDailyReminder(valueKey, step.label);
                   else await cancelReminder(valueKey);
                 }}

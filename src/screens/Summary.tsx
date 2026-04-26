@@ -10,6 +10,7 @@ import { buildSentence } from '../util/sentence';
 import { useStore } from '../state/store';
 import { useNav } from '../state/nav';
 import { useButtonOrigin } from '../util/origin';
+import { events, track } from '../util/analytics';
 
 export function Summary() {
   const answers = useStore((s) => s.answers);
@@ -23,12 +24,14 @@ export function Summary() {
   );
 
   const goHome = async () => {
+    track(events.summaryToHome);
     const origin = await measure();
     setWash({ color: HOME.bg, origin });
     setTimeout(() => setScreen('home'), 260);
   };
 
   const onShare = async () => {
+    track(events.summaryShared);
     const lines = filled
       .map((f) => {
         const { pre, em, post } = buildSentence(f.step.key, f.answer);

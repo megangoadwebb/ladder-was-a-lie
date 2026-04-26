@@ -21,6 +21,7 @@ import {
   currentDay,
 } from '../util/dates';
 import { computeStreak } from '../util/streak';
+import { events, track } from '../util/analytics';
 
 export function Home() {
   const answers = useStore((s) => s.answers);
@@ -82,8 +83,14 @@ export function Home() {
               today={todayDay}
               drag={drag}
               isDragActive={isActive}
-              onTapAdd={() => logToday(step.key)}
-              onTapCard={() => openDetail(step.key)}
+              onTapAdd={() => {
+                logToday(step.key);
+                track(events.checkInLogged, { step: step.key });
+              }}
+              onTapCard={() => {
+                track(events.valueDetailOpened, { step: step.key });
+                openDetail(step.key);
+              }}
               onOpenMenu={() => openMenu(step.key)}
               reminder={reminders[step.key]}
             />
@@ -171,7 +178,10 @@ export function Home() {
       <DraggableFlatList
         data={orderedKeys}
         keyExtractor={(k) => k}
-        onDragEnd={({ data }) => setOrder(data)}
+        onDragEnd={({ data }) => {
+          setOrder(data);
+          track(events.cardsReordered);
+        }}
         renderItem={renderItem}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
         activationDistance={12}
