@@ -32,6 +32,7 @@ import { useNav } from './src/state/nav';
 import { useStore } from './src/state/store';
 import { STEP_BY_KEY } from './src/theme/steps';
 import { scheduleDailyReminder, cancelReminder } from './src/state/notifications';
+import { startSync } from './src/state/sync';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -68,6 +69,14 @@ export default function App() {
     if (!hydrated) return;
     if (hasOnboarded) setScreen('home');
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  // Kick off Supabase anonymous sign-in + bidirectional sync once local
+  // state has hydrated. The remote row is the source of truth for return
+  // visits across devices/browsers.
+  useEffect(() => {
+    if (!hydrated) return;
+    void startSync();
   }, [hydrated]);
 
   const onLayout = useCallback(async () => {
