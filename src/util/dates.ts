@@ -21,6 +21,12 @@ export function monthLabel(d: Date = new Date()): string {
   return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 }
 
+export function fullDateLabel(d: Date = new Date()): string {
+  return d
+    .toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    .toUpperCase();
+}
+
 export function monthShort(d: Date = new Date()): string {
   return d.toLocaleString('en-US', { month: 'short' });
 }

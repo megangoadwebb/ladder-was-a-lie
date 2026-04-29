@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DraggableFlatList, {
@@ -8,15 +8,15 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { HOME, STEP_BY_KEY, STEPS, type StepKey } from '../theme/steps';
-import { fonts, padding } from '../theme/tokens';
-import { HamburgerGlyph } from '../components/HamburgerGlyph';
+import { fonts } from '../theme/tokens';
 import { ValueCard } from '../components/ValueCard';
+import { ResetSheet } from '../components/ResetSheet';
 import { useStore } from '../state/store';
 import { useNav } from '../state/nav';
 import {
   daysInMonth as daysInMonthFn,
   monthKey as monthKeyFn,
-  monthLabel,
+  fullDateLabel,
   todayISO,
   currentDay,
 } from '../util/dates';
@@ -30,11 +30,14 @@ export function Home() {
   const reminders = useStore((s) => s.reminders);
   const setOrder = useStore((s) => s.setOrder);
   const logToday = useStore((s) => s.logToday);
+  const resetAll = useStore((s) => s.resetAll);
 
   const setScreen = useNav((s) => s.setScreen);
   const setStepIdx = useNav((s) => s.setStepIdx);
   const openDetail = useNav((s) => s.openDetail);
   const openMenu = useNav((s) => s.openMenu);
+
+  const [resetOpen, setResetOpen] = useState(false);
 
   const dim = daysInMonthFn();
   const today = todayISO();
@@ -46,7 +49,9 @@ export function Home() {
   const orderedKeys: StepKey[] =
     order && order.length === STEPS.length ? order : STEPS.map((s) => s.key);
 
-  const restartOnboarding = () => {
+  const confirmReset = () => {
+    setResetOpen(false);
+    resetAll();
     setStepIdx(0);
     setScreen('landing');
   };
@@ -101,91 +106,135 @@ export function Home() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: HOME.bg }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: padding.topSafe,
-          paddingHorizontal: 24,
-          paddingBottom: 4,
-        }}
-      >
-        <Pressable onPress={restartOnboarding} hitSlop={10}>
-          <HamburgerGlyph color={HOME.ink} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: fonts.mono,
-            fontSize: 10.5,
-            letterSpacing: 0.18 * 10.5,
-            color: HOME.ink,
-            opacity: 0.55,
-          }}
-        >
-          {monthLabel().toUpperCase()}
-        </Text>
-      </View>
-
-      <View style={{ paddingHorizontal: 24, paddingTop: 6, paddingBottom: 8 }}>
-        <Text
-          style={{
-            fontFamily: fonts.serif,
-            fontSize: 26,
-            lineHeight: 30,
-            letterSpacing: -0.015 * 26,
-            color: HOME.ink,
-          }}
-        >
-          <Text style={{ fontFamily: fonts.serifItalic }}>How are you</Text> living it?
-        </Text>
-
+    <GestureHandlerRootView
+      style={{ flex: 1, backgroundColor: HOME.bg, overflow: 'hidden' }}
+    >
+      {/* Header — non-scrolling */}
+      <View style={{ flexShrink: 0 }}>
         <View
           style={{
             flexDirection: 'row',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: 10,
-            marginTop: 6,
+            paddingTop: 64,
+            paddingHorizontal: 24,
+            paddingBottom: 4,
           }}
         >
           <Text
             style={{
               fontFamily: fonts.mono,
               fontSize: 10.5,
-              letterSpacing: 0.16 * 10.5,
+              letterSpacing: 0.18 * 10.5,
               color: HOME.ink,
-              opacity: 0.45,
+              opacity: 0.55,
             }}
           >
-            TAP{'  '}
+            {fullDateLabel()}
           </Text>
-          <InlinePlus />
+
+          <Pressable
+            onPress={() => setResetOpen(true)}
+            hitSlop={8}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: 'rgba(243,240,234,0.16)',
+              backgroundColor: 'transparent',
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <RefreshGlyph color={HOME.ink} />
+            <Text
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 10,
+                letterSpacing: 0.18 * 10,
+                color: HOME.ink,
+                opacity: 0.85,
+              }}
+            >
+              RESET
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={{ paddingHorizontal: 24, paddingTop: 6, paddingBottom: 8 }}>
           <Text
             style={{
-              fontFamily: fonts.mono,
-              fontSize: 10.5,
-              letterSpacing: 0.16 * 10.5,
+              fontFamily: fonts.serif,
+              fontSize: 26,
+              lineHeight: 30,
+              letterSpacing: -0.015 * 26,
               color: HOME.ink,
-              opacity: 0.45,
             }}
           >
-            EACH DAY · {streak > 0 ? `${streak}-DAY STREAK` : 'START YOUR STREAK'}
+            <Text style={{ fontFamily: fonts.serifItalic }}>How are you</Text> living it?
           </Text>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              marginTop: 6,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 10.5,
+                letterSpacing: 0.16 * 10.5,
+                color: HOME.ink,
+                opacity: 0.45,
+              }}
+            >
+              TAP{'  '}
+            </Text>
+            <InlinePlus />
+            <Text
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 10.5,
+                letterSpacing: 0.16 * 10.5,
+                color: HOME.ink,
+                opacity: 0.45,
+              }}
+            >
+              EACH DAY · {streak > 0 ? `${streak}-DAY STREAK` : 'START YOUR STREAK'}
+            </Text>
+          </View>
         </View>
       </View>
 
-      <DraggableFlatList
-        data={orderedKeys}
-        keyExtractor={(k) => k}
-        onDragEnd={({ data }) => {
-          setOrder(data);
-          track(events.cardsReordered);
-        }}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
-        activationDistance={12}
-      />
+      {/* Single scroll region */}
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <DraggableFlatList
+          data={orderedKeys}
+          keyExtractor={(k) => k}
+          onDragEnd={({ data }) => {
+            setOrder(data);
+            track(events.cardsReordered);
+          }}
+          renderItem={renderItem}
+          containerStyle={{ flex: 1, minHeight: 0 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 56 }}
+          activationDistance={12}
+        />
+      </View>
+
+      {resetOpen && (
+        <ResetSheet
+          onCancel={() => setResetOpen(false)}
+          onConfirm={confirmReset}
+        />
+      )}
     </GestureHandlerRootView>
   );
 }
@@ -199,6 +248,30 @@ function InlinePlus() {
         stroke={HOME.ink}
         strokeWidth={0.8}
         strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function RefreshGlyph({ color }: { color: string }) {
+  return (
+    <Svg width={11} height={11} viewBox="0 0 12 12">
+      <Path
+        d="M10 6a4 4 0 1 1-1.17-2.83"
+        stroke={color}
+        strokeWidth={1.1}
+        strokeLinecap="round"
+        fill="none"
+        opacity={0.85}
+      />
+      <Path
+        d="M10 1.6V3.8H7.8"
+        stroke={color}
+        strokeWidth={1.1}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        opacity={0.85}
       />
     </Svg>
   );
