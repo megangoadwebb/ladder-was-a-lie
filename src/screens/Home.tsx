@@ -222,6 +222,8 @@ export function Home() {
             track(events.cardsReordered);
           }}
           renderItem={renderItem}
+          containerStyle={{ flex: 1, minHeight: 0 }}
+          style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 56 }}
           activationDistance={12}
         />
