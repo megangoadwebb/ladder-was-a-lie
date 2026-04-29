@@ -21,6 +21,15 @@ const URL = 'https://ladder-was-a-lie.vercel.app';
 const HEAD_INJECTION = `
     <meta name="description" content="${DESCRIPTION}" />
 
+    <style>
+      html, body, #root { height: 100%; margin: 0; }
+      html, body { overflow: hidden; overscroll-behavior: none; }
+      #root { display: flex; flex-direction: column; min-height: 0; }
+      @supports (height: 100dvh) {
+        html, body, #root { height: 100dvh; }
+      }
+    </style>
+
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
